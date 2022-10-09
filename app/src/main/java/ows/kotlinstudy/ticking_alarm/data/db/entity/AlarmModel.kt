@@ -11,7 +11,7 @@ enum class MERIDIEM {
 @Entity(primaryKeys = ["minute", "second"])
 data class AlarmModel(
     val meridiem: MERIDIEM,
+    val hour: Int,
     val minute: Int,
-    val second: Int,
     val switchOn: Boolean = false
 )

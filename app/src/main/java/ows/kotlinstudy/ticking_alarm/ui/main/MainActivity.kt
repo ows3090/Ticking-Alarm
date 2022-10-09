@@ -14,7 +14,7 @@ class MainActivity : AppCompatActivity(), MainContract.View<MainPresenter> {
     private lateinit var binding: ActivityMainBinding
 
     @Inject override lateinit var presenter: MainPresenter
-    //@Inject lateinit var adapter: MainAdapter
+    @Inject lateinit var adapter: MainAdapter
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -32,7 +32,7 @@ class MainActivity : AppCompatActivity(), MainContract.View<MainPresenter> {
             hour = LocalDateTime.now().hour
             minute = LocalDateTime.now().minute
         }
-        //binding.timeRecyclerView.adapter = adapter
+        binding.timeRecyclerView.adapter = adapter
     }
 
     private fun bindViews() =  with(binding){
