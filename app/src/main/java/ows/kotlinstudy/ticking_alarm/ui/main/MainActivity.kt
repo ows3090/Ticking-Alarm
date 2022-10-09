@@ -5,6 +5,9 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import dagger.hilt.android.AndroidEntryPoint
 import ows.kotlinstudy.ticking_alarm.R
+import ows.kotlinstudy.ticking_alarm.data.db.AlarmEntity
+import ows.kotlinstudy.ticking_alarm.data.db.MERIDIEM
+import ows.kotlinstudy.ticking_alarm.data.model.AlarmModel
 import ows.kotlinstudy.ticking_alarm.databinding.ActivityMainBinding
 import java.time.LocalDateTime
 import javax.inject.Inject
@@ -13,8 +16,11 @@ import javax.inject.Inject
 class MainActivity : AppCompatActivity(), MainContract.View<MainPresenter> {
     private lateinit var binding: ActivityMainBinding
 
-    @Inject override lateinit var presenter: MainPresenter
-    @Inject lateinit var adapter: MainAdapter
+    @Inject
+    override lateinit var presenter: MainPresenter
+
+    @Inject
+    lateinit var adapter: MainAdapter
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -27,7 +33,7 @@ class MainActivity : AppCompatActivity(), MainContract.View<MainPresenter> {
         bindViews()
     }
 
-    private fun initViews() = with(binding){
+    private fun initViews() = with(binding) {
         binding.timePicker.apply {
             hour = LocalDateTime.now().hour
             minute = LocalDateTime.now().minute
@@ -35,8 +41,16 @@ class MainActivity : AppCompatActivity(), MainContract.View<MainPresenter> {
         binding.timeRecyclerView.adapter = adapter
     }
 
-    private fun bindViews() =  with(binding){
-
+    private fun bindViews() = with(binding) {
+        addButton.setOnClickListener {
+            val hour = timePicker.hour
+            val minute = timePicker.minute
+            presenter.addAlarm(hour, minute)
+        }
     }
 
+    override fun showAlarmList(list: List<AlarmModel>) {
+        adapter.setAlarmList(list)
+        adapter.notifyDataSetChanged()
+    }
 }

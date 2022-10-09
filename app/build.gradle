@@ -57,7 +57,9 @@ dependencies {
     // Room: Local Database
     implementation "androidx.room:room-runtime:2.4.3"
     annotationProcessor "androidx.room:room-compiler:2.4.3"
-
-    // To use Kotlin annotation processing tool (kapt)
     kapt "androidx.room:room-compiler:2.4.3"
+    implementation "androidx.room:room-rxjava3:2.4.3"
+
+    // RxJava
+    implementation 'io.reactivex.rxjava3:rxandroid:3.0.0'
 }

@@ -8,8 +8,8 @@ enum class MERIDIEM {
     ANTE, POST
 }
 
-@Entity(primaryKeys = ["minute", "second"])
-data class AlarmModel(
+@Entity(primaryKeys = ["hour","minute"])
+data class AlarmEntity(
     val meridiem: MERIDIEM,
     val hour: Int,
     val minute: Int,

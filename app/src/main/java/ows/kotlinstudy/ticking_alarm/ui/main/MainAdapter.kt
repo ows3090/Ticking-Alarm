@@ -1,19 +1,26 @@
 package ows.kotlinstudy.ticking_alarm.ui.main
 
+import android.annotation.SuppressLint
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
+import ows.kotlinstudy.ticking_alarm.data.db.MERIDIEM
+import ows.kotlinstudy.ticking_alarm.data.model.AlarmModel
 import ows.kotlinstudy.ticking_alarm.databinding.ItemViewTimeBinding
 import javax.inject.Inject
 
 class MainAdapter @Inject constructor() : RecyclerView.Adapter<MainAdapter.ViewHolder>() {
-    val list = listOf<Int>()
-
     inner class ViewHolder(
         private val binding: ItemViewTimeBinding
     ) : RecyclerView.ViewHolder(binding.root) {
-
+        fun bindItem(item: AlarmModel) {
+            binding.meridiemTextView.text = if (item.alarmInfo.meridiem == MERIDIEM.ANTE) "오전" else "오후"
+            binding.timeTextView.text = String.format("%02d:%02d", item.alarmInfo.hour % 12, item.alarmInfo.minute)
+            binding.deleteButton.setOnClickListener { item.onItemClickEvent() }
+        }
     }
+
+    private var alarmList = listOf<AlarmModel>()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         return ViewHolder(
@@ -26,8 +33,12 @@ class MainAdapter @Inject constructor() : RecyclerView.Adapter<MainAdapter.ViewH
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-
+        holder.bindItem(alarmList[position])
     }
 
-    override fun getItemCount(): Int = list.size
+    override fun getItemCount(): Int = alarmList.size
+
+    fun setAlarmList(list: List<AlarmModel>) {
+        this.alarmList = list
+    }
 }
