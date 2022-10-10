@@ -22,7 +22,6 @@ class MainActivity : AppCompatActivity(), MainContract.View<MainPresenter> {
     @Inject
     lateinit var adapter: MainAdapter
 
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)

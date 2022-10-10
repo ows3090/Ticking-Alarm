@@ -41,8 +41,11 @@ class MainPresenter @Inject constructor(
                 minute,
                 true
             ),
-            onItemClickEvent = {
+            onClickEvent = {
                 deleteAlarmModel(hour, minute)
+            },
+            onToggleEvent = {
+                updateAlarmModel(hour, minute)
             }
         )
         addAlarmModel(model)
@@ -56,7 +59,13 @@ class MainPresenter @Inject constructor(
                 .subscribe(
                     { list ->
                         view.showAlarmList(
-                            list.map { AlarmModel(it) { deleteAlarmModel(it.hour, it.minute) } }
+                            list.map {
+                                AlarmModel(
+                                    it,
+                                    onClickEvent = { deleteAlarmModel(it.hour, it.minute) },
+                                    onToggleEvent = { updateAlarmModel(it.hour, it.minute)}
+                                )
+                            }
                         )
                     },
                     { error -> Timber.e(error) }
@@ -89,6 +98,21 @@ class MainPresenter @Inject constructor(
                 .doFinally { getAlarmModelList() }
                 .subscribe(
                     { entity -> dao.deleteAlarm(entity) },
+                    { error -> Timber.e(error) }
+                )
+        )
+    }
+
+    private fun updateAlarmModel(hour: Int, minute: Int) {
+        compositeDisposable.add(
+            Observable.just(Pair(hour, minute))
+                .subscribeOn(Schedulers.io())
+                .doFinally { getAlarmModelList() }
+                .subscribe(
+                    { pair ->
+                        val entity = dao.getAlarm(pair.first, pair.second)
+                        dao.updateaAlarm(entity.copy(switchOn = entity.switchOn.not()))
+                    },
                     { error -> Timber.e(error) }
                 )
         )
