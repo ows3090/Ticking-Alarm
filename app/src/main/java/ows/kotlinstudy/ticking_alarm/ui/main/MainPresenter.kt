@@ -26,7 +26,7 @@ class MainPresenter @Inject constructor(
     @Suppress("UNCHECKED_CAST")
     override fun onCreate(view: BaseView<BasePresenter>) {
         this.view = view as MainContract.View<MainPresenter>
-        getAlarmModelList()
+        initAlarmList()
     }
 
     override fun onDestroy() {
@@ -38,17 +38,15 @@ class MainPresenter @Inject constructor(
             AlarmEntity(
                 if (hour < 12) MERIDIEM.ANTE else MERIDIEM.POST,
                 hour,
-                minute,
-                true
+                minute
             ),
-            onItemClickEvent = {
-                deleteAlarmModel(hour, minute)
-            }
+            onClickEvent = { deleteAlarmModel(hour, minute) },
+            onToggleEvent = { updateAlarmModel(hour, minute) }
         )
         addAlarmModel(model)
     }
 
-    private fun getAlarmModelList() {
+    private fun initAlarmList() {
         compositeDisposable.add(
             dao.getAll()
                 .subscribeOn(Schedulers.io())
@@ -56,7 +54,13 @@ class MainPresenter @Inject constructor(
                 .subscribe(
                     { list ->
                         view.showAlarmList(
-                            list.map { AlarmModel(it) { deleteAlarmModel(it.hour, it.minute) } }
+                            list.map {
+                                AlarmModel(
+                                    it.copy(switchOn = false),
+                                    onClickEvent = { deleteAlarmModel(it.hour, it.minute) },
+                                    onToggleEvent = { updateAlarmModel(it.hour, it.minute) }
+                                )
+                            }
                         )
                     },
                     { error -> Timber.e(error) }
@@ -68,7 +72,7 @@ class MainPresenter @Inject constructor(
         compositeDisposable.add(
             Observable.just(alarmModel)
                 .subscribeOn(Schedulers.io())
-                .doFinally { getAlarmModelList() }
+                .doFinally { updateAlarmModelList() }
                 .subscribe(
                     { model -> dao.addAlarm(model.alarmInfo) },
                     { error -> Timber.e(error) }
@@ -86,9 +90,52 @@ class MainPresenter @Inject constructor(
                 )
             )
                 .subscribeOn(Schedulers.io())
-                .doFinally { getAlarmModelList() }
+                .doFinally { updateAlarmModelList() }
                 .subscribe(
                     { entity -> dao.deleteAlarm(entity) },
+                    { error -> Timber.e(error) }
+                )
+        )
+    }
+
+    private fun updateAlarmModel(hour: Int, minute: Int) {
+        compositeDisposable.add(
+            Observable.just(Pair(hour, minute))
+                .subscribeOn(Schedulers.io())
+                .doFinally { updateAlarmModelList() }
+                .subscribe(
+                    { pair ->
+                        val entity = dao.getAlarm(pair.first, pair.second)
+                        dao.updateAlarm(entity.copy(switchOn = entity.switchOn.not()))
+
+                        if (entity.switchOn.not()) {
+                            view.switchOnAlarm(hour, minute)
+                        } else {
+                            view.switchOffAlarm(hour, minute)
+                        }
+                    },
+                    { error -> Timber.e(error) }
+                )
+        )
+    }
+
+    private fun updateAlarmModelList() {
+        compositeDisposable.add(
+            dao.getAll()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(
+                    { list ->
+                        view.showAlarmList(
+                            list.map {
+                                AlarmModel(
+                                    it,
+                                    onClickEvent = { deleteAlarmModel(it.hour, it.minute) },
+                                    onToggleEvent = { updateAlarmModel(it.hour, it.minute) }
+                                )
+                            }.sortedWith(compareBy({ it.alarmInfo.hour }, { it.alarmInfo.minute }))
+                        )
+                    },
                     { error -> Timber.e(error) }
                 )
         )

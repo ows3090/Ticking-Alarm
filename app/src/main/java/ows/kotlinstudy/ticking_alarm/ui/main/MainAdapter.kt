@@ -1,6 +1,9 @@
 package ows.kotlinstudy.ticking_alarm.ui.main
 
 import android.annotation.SuppressLint
+import android.app.AlarmManager
+import android.app.PendingIntent
+import android.content.Context
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
@@ -16,7 +19,9 @@ class MainAdapter @Inject constructor() : RecyclerView.Adapter<MainAdapter.ViewH
         fun bindItem(item: AlarmModel) {
             binding.meridiemTextView.text = if (item.alarmInfo.meridiem == MERIDIEM.ANTE) "오전" else "오후"
             binding.timeTextView.text = String.format("%02d:%02d", item.alarmInfo.hour % 12, item.alarmInfo.minute)
-            binding.deleteButton.setOnClickListener { item.onItemClickEvent() }
+            binding.switchView.isChecked = item.alarmInfo.switchOn
+            binding.switchView.setOnClickListener { item.onToggleEvent() }
+            binding.deleteButton.setOnClickListener { item.onClickEvent() }
         }
     }
 
