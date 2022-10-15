@@ -13,11 +13,11 @@ interface AlarmDao {
     @Query("SELECT * FROM AlarmEntity WHERE hour=:hour AND minute=:minute")
     fun getAlarm(hour: Int, minute: Int) : AlarmEntity
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     fun addAlarm(entity: AlarmEntity)
 
     @Update
-    fun updateaAlarm(entity: AlarmEntity)
+    fun updateAlarm(entity: AlarmEntity)
 
     @Delete
     fun deleteAlarm(entity: AlarmEntity)

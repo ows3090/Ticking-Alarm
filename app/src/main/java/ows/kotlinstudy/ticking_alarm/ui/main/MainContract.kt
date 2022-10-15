@@ -7,6 +7,8 @@ import ows.kotlinstudy.ticking_alarm.ui.base.BaseView
 interface MainContract {
     interface View<out PresenterT> : BaseView<PresenterT> {
         fun showAlarmList(list: List<AlarmModel>)
+        fun switchOnAlarm(hour: Int, minute: Int)
+        fun switchOffAlarm(hour: Int, minute: Int)
     }
 
     interface Presenter : BasePresenter {
