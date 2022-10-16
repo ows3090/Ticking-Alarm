@@ -8,9 +8,7 @@ import timber.log.Timber
 
 class AlarmBroadcastReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
-        if(intent.action == "android.intent.action.BOOT_COMPLETED"){
-            Timber.d("AlarmBroadcastReceiver")
-            Toast.makeText(context, "알람이 울립니다!", Toast.LENGTH_SHORT).show()
-        }
+        Timber.d("AlarmBroadcastReceiver")
+        Toast.makeText(context, "알람이 울립니다!", Toast.LENGTH_SHORT).show()
     }
 }

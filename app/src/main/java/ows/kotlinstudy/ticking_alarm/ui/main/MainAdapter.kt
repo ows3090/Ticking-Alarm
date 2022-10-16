@@ -13,9 +13,11 @@ import ows.kotlinstudy.ticking_alarm.databinding.ItemViewTimeBinding
 import javax.inject.Inject
 
 class MainAdapter @Inject constructor() : RecyclerView.Adapter<MainAdapter.ViewHolder>() {
+
     inner class ViewHolder(
         private val binding: ItemViewTimeBinding
     ) : RecyclerView.ViewHolder(binding.root) {
+
         fun bindItem(item: AlarmModel) {
             binding.meridiemTextView.text = if (item.alarmInfo.meridiem == MERIDIEM.ANTE) "오전" else "오후"
             binding.timeTextView.text = String.format("%02d:%02d", item.alarmInfo.hour % 12, item.alarmInfo.minute)
