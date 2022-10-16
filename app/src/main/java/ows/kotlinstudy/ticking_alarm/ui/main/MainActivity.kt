@@ -66,12 +66,12 @@ class MainActivity : AppCompatActivity(), MainContract.View<MainPresenter> {
     }
 
     override fun switchOnAlarm(hour: Int, minute: Int) {
-        Timber.d("switchOnAlarm")
+        Timber.d("switchOnAlarm $hour $minute")
 
         val alarmId = hour * 60 + minute
         val alarmManager = getSystemService(Context.ALARM_SERVICE) as? AlarmManager
         val pendingIntent = Intent(this, AlarmBroadcastReceiver::class.java).let { intent ->
-            PendingIntent.getBroadcast(this, alarmId, intent, 0)
+            PendingIntent.getBroadcast(this, alarmId, intent, PendingIntent.FLAG_UPDATE_CURRENT)
         }
 
         val calendar = Calendar.getInstance().apply {
@@ -87,6 +87,7 @@ class MainActivity : AppCompatActivity(), MainContract.View<MainPresenter> {
 
         Timber.d("switchOnAlarm ${calendar.get(Calendar.YEAR)} ${calendar.get(Calendar.MONTH)} ${calendar.get(Calendar.DAY_OF_MONTH)}" +
                 " ${calendar.get(Calendar.HOUR_OF_DAY)} ${calendar.get(Calendar.MINUTE)} ${calendar.get(Calendar.SECOND)}")
+
         alarmManager?.setRepeating(
             AlarmManager.RTC_WAKEUP,
             calendar.timeInMillis,
