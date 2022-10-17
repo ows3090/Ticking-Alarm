@@ -34,7 +34,7 @@ class MainPresenter @Inject constructor(
     override fun addAlarm(hour: Int, minute: Int) {
         Timber.d("addAlarm")
         val model = AlarmModel(
-            alarmInfo = AlarmEntity(if (hour < 12) MERIDIEM.ANTE else MERIDIEM.POST, hour, minute),
+            alarmInfo = AlarmEntity(if (hour < 12) MERIDIEM.ANTE else MERIDIEM.POST, hour, minute, true),
             onClickEvent = { deleteAlarmModel(hour, minute) },
             onToggleEvent = { updateAlarmModel(hour, minute) }
         )
@@ -65,7 +65,10 @@ class MainPresenter @Inject constructor(
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
-                    { showUpdateAlarmList() },
+                    {
+                        showUpdateAlarmList()
+                        view.switchOnAlarm(alarmModel.alarmInfo.hour, alarmModel.alarmInfo.minute)
+                    },
                     { error -> Timber.e(error) }
                 )
         )
@@ -74,14 +77,16 @@ class MainPresenter @Inject constructor(
     private fun deleteAlarmModel(hour: Int, minute: Int) {
         Timber.d("deleteAlarmModel")
         compositeDisposable.add(
-            dao.deleteAlarm(
-                AlarmEntity(if (hour < 12) MERIDIEM.ANTE else MERIDIEM.POST, hour, minute)
-            )
+            dao.getAlarm(hour, minute)
+                .flatMap { dao.deleteAlarm(it).andThen(Single.just(it)) }
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
-                    { showUpdateAlarmList() },
-                    { error -> Timber.e(error) }
+                    {
+                        showUpdateAlarmList()
+                        if(it.switchOn)  view.switchOffAlarm(hour, minute)
+                    },
+                    { error -> Timber.e(error)}
                 )
         )
     }
