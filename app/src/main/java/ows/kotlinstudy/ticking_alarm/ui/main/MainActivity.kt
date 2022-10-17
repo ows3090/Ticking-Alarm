@@ -5,6 +5,7 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import dagger.hilt.android.AndroidEntryPoint
@@ -88,16 +89,22 @@ class MainActivity : AppCompatActivity(), MainContract.View<MainPresenter> {
         Timber.d("switchOnAlarm ${calendar.get(Calendar.YEAR)} ${calendar.get(Calendar.MONTH)} ${calendar.get(Calendar.DAY_OF_MONTH)}" +
                 " ${calendar.get(Calendar.HOUR_OF_DAY)} ${calendar.get(Calendar.MINUTE)} ${calendar.get(Calendar.SECOND)}")
 
-        alarmManager?.setRepeating(
+        Toast.makeText(this, "${calendar.get(Calendar.HOUR_OF_DAY)}시 ${calendar.get(Calendar.MINUTE)}에 알람이 울립니다.", Toast.LENGTH_SHORT).show()
+        alarmManager?.setExactAndAllowWhileIdle(
             AlarmManager.RTC_WAKEUP,
             calendar.timeInMillis,
-            AlarmManager.INTERVAL_DAY,
             pendingIntent
         )
     }
 
     override fun switchOffAlarm(hour: Int, minute: Int) {
-        Timber.d("switchOffAlarm")
+        Timber.d("switchOffAlarm $hour $minute")
 
+        val alarmId = hour*60 + minute
+        val alarmManager = getSystemService(Context.ALARM_SERVICE) as? AlarmManager
+        val pendingIntent = Intent(this, AlarmBroadcastReceiver::class.java).let { intent ->
+            PendingIntent.getBroadcast(this, alarmId, intent, PendingIntent.FLAG_NO_CREATE)
+        }
+        alarmManager?.cancel(pendingIntent)
     }
 }
