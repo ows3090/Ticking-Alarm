@@ -72,7 +72,9 @@ class MainActivity : AppCompatActivity(), MainContract.View<MainPresenter> {
 
         val alarmId = hour * 60 + minute
         val alarmManager = getSystemService(Context.ALARM_SERVICE) as? AlarmManager
-        val pendingIntent = Intent(this, AlarmBroadcastReceiver::class.java).let { intent ->
+        val pendingIntent = Intent(this, AlarmBroadcastReceiver::class.java).apply {
+            putExtra(ALARM_ID, alarmId)
+        }.let { intent ->
             PendingIntent.getBroadcast(this, alarmId, intent, PendingIntent.FLAG_UPDATE_CURRENT)
         }
 
@@ -83,12 +85,12 @@ class MainActivity : AppCompatActivity(), MainContract.View<MainPresenter> {
             set(Calendar.SECOND, 0)
         }
 
-        if(AlarmUtils.isBeforeToday(calendar)){
+        if (AlarmUtils.isBeforeToday(calendar)) {
             calendar.add(Calendar.DAY_OF_MONTH, 1)
         }
 
         Timber.d("switchOnAlarm ${calendar.get(Calendar.YEAR)} ${calendar.get(Calendar.MONTH)} ${calendar.get(Calendar.DAY_OF_MONTH)}" +
-                " ${calendar.get(Calendar.HOUR_OF_DAY)} ${calendar.get(Calendar.MINUTE)} ${calendar.get(Calendar.SECOND)}")
+                    " ${calendar.get(Calendar.HOUR_OF_DAY)} ${calendar.get(Calendar.MINUTE)} ${calendar.get(Calendar.SECOND)}")
 
         Toast.makeText(this, "${calendar.get(Calendar.HOUR_OF_DAY)}시 ${calendar.get(Calendar.MINUTE)}에 알람이 울립니다.", Toast.LENGTH_SHORT).show()
         alarmManager?.setExactAndAllowWhileIdle(
@@ -101,11 +103,15 @@ class MainActivity : AppCompatActivity(), MainContract.View<MainPresenter> {
     override fun switchOffAlarm(hour: Int, minute: Int) {
         Timber.d("switchOffAlarm $hour $minute")
 
-        val alarmId = hour*60 + minute
+        val alarmId = hour * 60 + minute
         val alarmManager = getSystemService(Context.ALARM_SERVICE) as? AlarmManager
         val pendingIntent = Intent(this, AlarmBroadcastReceiver::class.java).let { intent ->
             PendingIntent.getBroadcast(this, alarmId, intent, PendingIntent.FLAG_NO_CREATE)
         }
         alarmManager?.cancel(pendingIntent)
+    }
+
+    companion object {
+        const val ALARM_ID = "ALARM_ID"
     }
 }

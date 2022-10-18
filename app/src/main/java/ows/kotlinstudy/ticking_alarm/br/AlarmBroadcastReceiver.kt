@@ -3,11 +3,14 @@ package ows.kotlinstudy.ticking_alarm.br
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.widget.Toast
+import androidx.core.app.NotificationManagerCompat
+import ows.kotlinstudy.ticking_alarm.R
 import ows.kotlinstudy.ticking_alarm.ui.main.MainActivity
 import ows.kotlinstudy.ticking_alarm.ui.main.MainAdapter
 import timber.log.Timber
@@ -16,12 +19,15 @@ class AlarmBroadcastReceiver : BroadcastReceiver() {
     val ALAMR_CHANNEL_NAME = "TICKING-ALARM"
     val ALARM_CHANNEL_ID = "TICKING-ALARM's ID"
     val ALARM_DESCRIPTION = "THIS IS A TICKING-ALARM APP"
+    var alarmId: Int = 0
 
     override fun onReceive(context: Context, intent: Intent) {
-        Timber.d("onReceive ${intent.action}")
+        alarmId = intent.getIntExtra(MainActivity.ALARM_ID, 0)
+        Timber.d("onReceive ${intent.action} ${alarmId}")
 
         createNotificationChannel(context)
-        createNotification(context)
+        val builder = createNotification(context)
+        startNotification(context, builder)
     }
 
     private fun createNotificationChannel(context: Context){
@@ -38,9 +44,23 @@ class AlarmBroadcastReceiver : BroadcastReceiver() {
         }
     }
 
-    private fun createNotification(context: Context){
+    private fun createNotification(context: Context): Notification.Builder{
         val intent = Intent(context, MainActivity::class.java).apply{
-            flags = Intent.FLAG_AC
+            flags = Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK
+        }
+
+        val pendingIntent = PendingIntent.getActivity(context, alarmId, intent, PendingIntent.FLAG_UPDATE_CURRENT)
+        return Notification.Builder(context, ALARM_CHANNEL_ID)
+            .setSmallIcon(R.drawable.ic_baseline_access_alarms_24)
+            .setContentTitle("Ticking-Alarm")
+            .setContentText("${alarmId.toInt()/60}시 ${alarmId.toInt()%60}분이 되었습니다.")
+            .setContentIntent(pendingIntent)
+            .setAutoCancel(true)
+    }
+
+    private fun startNotification(context: Context,builder: Notification.Builder){
+        with(NotificationManagerCompat.from(context)){
+            notify(alarmId.toInt(), builder.build())
         }
     }
 }
