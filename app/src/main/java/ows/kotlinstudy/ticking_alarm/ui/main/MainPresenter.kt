@@ -22,27 +22,19 @@ class MainPresenter @Inject constructor(
     private val compositeDisposable = CompositeDisposable()
 
     @Suppress("UNCHECKED_CAST")
-    override fun onCreate(view: BaseView<BasePresenter>) {
+    override fun onCreate(view: BaseView<out BasePresenter>) {
+        Timber.d("onCreate()")
         this.view = view as MainContract.View<MainPresenter>
-        initAlarmList()
+        init()
     }
 
     override fun onDestroy() {
+        Timber.d("onDestory()")
         compositeDisposable.dispose()
     }
 
-    override fun addAlarm(hour: Int, minute: Int) {
-        Timber.d("addAlarm")
-        val model = AlarmModel(
-            alarmInfo = AlarmEntity(if (hour < 12) MERIDIEM.ANTE else MERIDIEM.POST, hour, minute, true),
-            onClickEvent = { deleteAlarmModel(hour, minute) },
-            onToggleEvent = { updateAlarmModel(hour, minute) }
-        )
-        addAlarmModel(model)
-    }
-
-    private fun initAlarmList() {
-        Timber.d("initAlarmList")
+    override fun init() {
+        Timber.d("init()")
         compositeDisposable.add(
             dao.getAll()
                 .flatMap { list ->
@@ -52,47 +44,36 @@ class MainPresenter @Inject constructor(
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
-                    { showUpdateAlarmList() },
+                    { selectAll() },
                     { error -> Timber.e(error) }
                 )
         )
     }
 
-    private fun addAlarmModel(alarmModel: AlarmModel) {
-        Timber.d("addAlarmModel")
+    override fun insertAlarm(hour: Int, minute: Int) {
+        Timber.d("addAlarm hour: $hour minute: $minute")
+        val model = AlarmModel(
+            alarmInfo = AlarmEntity(if (hour < 12) MERIDIEM.ANTE else MERIDIEM.POST, hour, minute, true),
+            onClickEvent = { deleteAlarm(hour, minute) },
+            onToggleEvent = { updateAlarm(hour, minute) }
+        )
+
         compositeDisposable.add(
-            dao.insertAlarm(alarmModel.alarmInfo)
+            dao.insertAlarm(model.alarmInfo)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
                     {
-                        showUpdateAlarmList()
-                        view.switchOnAlarm(alarmModel.alarmInfo.hour, alarmModel.alarmInfo.minute)
+                        selectAll()
+                        view.switchOnAlarm(model.alarmInfo.hour, model.alarmInfo.minute)
                     },
                     { error -> Timber.e(error) }
                 )
         )
     }
 
-    private fun deleteAlarmModel(hour: Int, minute: Int) {
-        Timber.d("deleteAlarmModel")
-        compositeDisposable.add(
-            dao.getAlarm(hour, minute)
-                .flatMap { dao.deleteAlarm(it).andThen(Single.just(it)) }
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(
-                    {
-                        showUpdateAlarmList()
-                        if(it.switchOn)  view.switchOffAlarm(hour, minute)
-                    },
-                    { error -> Timber.e(error)}
-                )
-        )
-    }
-
-    private fun updateAlarmModel(hour: Int, minute: Int) {
-        Timber.d("updateAlarmModel")
+    override fun updateAlarm(hour: Int, minute: Int) {
+        Timber.d("updateAlarm hour: $hour minute: $minute")
         compositeDisposable.add(
             dao.getAlarm(hour, minute)
                 .flatMap { entity ->
@@ -103,7 +84,7 @@ class MainPresenter @Inject constructor(
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
                     { entity ->
-                        showUpdateAlarmList()
+                        selectAll()
                         if (entity.switchOn) {
                             view.switchOnAlarm(entity.hour, entity.minute)
                         } else {
@@ -115,8 +96,25 @@ class MainPresenter @Inject constructor(
         )
     }
 
-    private fun showUpdateAlarmList() {
-        Timber.d("showUpdateAlarmList")
+    override fun deleteAlarm(hour: Int, minute: Int) {
+        Timber.d("deleteAlarm hour: $hour minute: $minute")
+        compositeDisposable.add(
+            dao.getAlarm(hour, minute)
+                .flatMap { dao.deleteAlarm(it).andThen(Single.just(it)) }
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(
+                    {
+                        selectAll()
+                        if(it.switchOn)  view.switchOffAlarm(hour, minute)
+                    },
+                    { error -> Timber.e(error)}
+                )
+        )
+    }
+
+    override fun selectAll() {
+        Timber.d("selectAll()")
         compositeDisposable.add(
             dao.getAll()
                 .subscribeOn(Schedulers.io())
@@ -126,8 +124,8 @@ class MainPresenter @Inject constructor(
                         val alarmList = list.map {
                             AlarmModel(
                                 it,
-                                onClickEvent = { deleteAlarmModel(it.hour, it.minute) },
-                                onToggleEvent = { updateAlarmModel(it.hour, it.minute) }
+                                onClickEvent = { deleteAlarm(it.hour, it.minute) },
+                                onToggleEvent = { updateAlarm(it.hour, it.minute) }
                             )
                         }.sortedWith(compareBy({ it.alarmInfo.hour }, { it.alarmInfo.minute }))
                         view.showAlarmList(alarmList)
@@ -136,4 +134,20 @@ class MainPresenter @Inject constructor(
                 )
         )
     }
+
+//    private fun initSavedAlarmList() {
+//        Timber.d("initSavedAlarmList")
+//        compositeDisposable.add(
+//            dao.getAll()
+//                .subscribeOn(Schedulers.io())
+//                .observeOn(AndroidSchedulers.mainThread())
+//                .subscribe(
+//                    { list ->
+//                        showUpdateAlarmList()
+//                        list.filter { it.switchOn }.forEach{ view.switchOnAlarm(it.hour, it.minute)}
+//                    },
+//                    { error -> Timber.e(error)}
+//                )
+//        )
+//    }
 }

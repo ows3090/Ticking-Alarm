@@ -7,14 +7,11 @@ import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.recyclerview.widget.LinearLayoutManager
 import dagger.hilt.android.AndroidEntryPoint
-import ows.kotlinstudy.ticking_alarm.R
-import ows.kotlinstudy.ticking_alarm.br.AlarmBroadcastReceiver
-import ows.kotlinstudy.ticking_alarm.data.db.AlarmEntity
-import ows.kotlinstudy.ticking_alarm.data.db.MERIDIEM
+import ows.kotlinstudy.ticking_alarm.br.AlarmReceiver
 import ows.kotlinstudy.ticking_alarm.data.model.AlarmModel
 import ows.kotlinstudy.ticking_alarm.databinding.ActivityMainBinding
+import ows.kotlinstudy.ticking_alarm.ui.adapter.AlarmAdapter
 import ows.kotlinstudy.ticking_alarm.util.AlarmUtils
 import timber.log.Timber
 import java.time.LocalDateTime
@@ -29,24 +26,27 @@ class MainActivity : AppCompatActivity(), MainContract.View<MainPresenter> {
     override lateinit var presenter: MainPresenter
 
     @Inject
-    lateinit var adapter: MainAdapter
+    lateinit var adapter: AlarmAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        Timber.d("onCreate()")
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
         presenter.onCreate(this)
+
         initViews()
         bindViews()
     }
 
     override fun onDestroy() {
+        Timber.d("onDestory()")
         presenter.onDestroy()
         super.onDestroy()
     }
 
     private fun initViews() = with(binding) {
+        Timber.d("initViews()")
         binding.timePicker.apply {
             hour = LocalDateTime.now().hour
             minute = LocalDateTime.now().minute
@@ -55,26 +55,25 @@ class MainActivity : AppCompatActivity(), MainContract.View<MainPresenter> {
     }
 
     private fun bindViews() = with(binding) {
+        Timber.d("bindViews()")
         addButton.setOnClickListener {
             val hour = timePicker.hour
             val minute = timePicker.minute
-            presenter.addAlarm(hour, minute)
+            presenter.insertAlarm(hour, minute)
         }
     }
 
     override fun showAlarmList(list: List<AlarmModel>) {
+        Timber.d("showAlarmList() list: $list")
         adapter.setAlarmList(list)
         adapter.notifyDataSetChanged()
     }
 
     override fun switchOnAlarm(hour: Int, minute: Int) {
-        Timber.d("switchOnAlarm $hour $minute")
-
+        Timber.d("switchOnAlarm hour: $hour minute: $minute")
         val alarmId = hour * 60 + minute
-        val alarmManager = getSystemService(Context.ALARM_SERVICE) as? AlarmManager
-        val pendingIntent = Intent(this, AlarmBroadcastReceiver::class.java).apply {
-            putExtra(ALARM_ID, alarmId)
-        }.let { intent ->
+        val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        val pendingIntent = Intent(this, AlarmReceiver::class.java).apply { putExtra(ALARM_ID, alarmId) }.let { intent ->
             PendingIntent.getBroadcast(this, alarmId, intent, PendingIntent.FLAG_UPDATE_CURRENT)
         }
 
@@ -93,7 +92,7 @@ class MainActivity : AppCompatActivity(), MainContract.View<MainPresenter> {
                     " ${calendar.get(Calendar.HOUR_OF_DAY)} ${calendar.get(Calendar.MINUTE)} ${calendar.get(Calendar.SECOND)}")
 
         Toast.makeText(this, "${calendar.get(Calendar.HOUR_OF_DAY)}시 ${calendar.get(Calendar.MINUTE)}에 알람이 울립니다.", Toast.LENGTH_SHORT).show()
-        alarmManager?.setExactAndAllowWhileIdle(
+        alarmManager.setExactAndAllowWhileIdle(
             AlarmManager.RTC_WAKEUP,
             calendar.timeInMillis,
             pendingIntent
@@ -102,13 +101,12 @@ class MainActivity : AppCompatActivity(), MainContract.View<MainPresenter> {
 
     override fun switchOffAlarm(hour: Int, minute: Int) {
         Timber.d("switchOffAlarm $hour $minute")
-
         val alarmId = hour * 60 + minute
-        val alarmManager = getSystemService(Context.ALARM_SERVICE) as? AlarmManager
-        val pendingIntent = Intent(this, AlarmBroadcastReceiver::class.java).let { intent ->
+        val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        val pendingIntent = Intent(this, AlarmReceiver::class.java).let { intent ->
             PendingIntent.getBroadcast(this, alarmId, intent, PendingIntent.FLAG_NO_CREATE)
         }
-        alarmManager?.cancel(pendingIntent)
+        alarmManager.cancel(pendingIntent)
     }
 
     companion object {

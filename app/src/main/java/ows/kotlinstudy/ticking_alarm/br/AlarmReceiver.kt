@@ -1,21 +1,20 @@
 package ows.kotlinstudy.ticking_alarm.br
 
-import android.app.Notification
-import android.app.NotificationChannel
-import android.app.NotificationManager
-import android.app.PendingIntent
+import android.annotation.SuppressLint
+import android.app.*
 import android.content.BroadcastReceiver
 import android.content.Context
+import android.content.Context.POWER_SERVICE
 import android.content.Intent
 import android.os.Build
+import android.os.PowerManager
 import android.widget.Toast
 import androidx.core.app.NotificationManagerCompat
 import ows.kotlinstudy.ticking_alarm.R
 import ows.kotlinstudy.ticking_alarm.ui.main.MainActivity
-import ows.kotlinstudy.ticking_alarm.ui.main.MainAdapter
 import timber.log.Timber
 
-class AlarmBroadcastReceiver : BroadcastReceiver() {
+class AlarmReceiver : BroadcastReceiver() {
     val ALAMR_CHANNEL_NAME = "TICKING-ALARM"
     val ALARM_CHANNEL_ID = "TICKING-ALARM's ID"
     val ALARM_DESCRIPTION = "THIS IS A TICKING-ALARM APP"
@@ -23,7 +22,7 @@ class AlarmBroadcastReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
         alarmId = intent.getIntExtra(MainActivity.ALARM_ID, 0)
-        Timber.d("onReceive ${intent.action} ${alarmId}")
+        Timber.d("onReceive ${intent.action} $alarmId")
 
         createNotificationChannel(context)
         val builder = createNotification(context)
@@ -44,6 +43,7 @@ class AlarmBroadcastReceiver : BroadcastReceiver() {
         }
     }
 
+    @SuppressLint("NewApi", "UnspecifiedImmutableFlag")
     private fun createNotification(context: Context): Notification.Builder{
         val intent = Intent(context, MainActivity::class.java).apply{
             flags = Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK
