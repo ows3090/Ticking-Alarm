@@ -1,9 +1,5 @@
-package ows.kotlinstudy.ticking_alarm.ui.main
+package ows.kotlinstudy.ticking_alarm.ui.adapter
 
-import android.annotation.SuppressLint
-import android.app.AlarmManager
-import android.app.PendingIntent
-import android.content.Context
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
@@ -12,8 +8,8 @@ import ows.kotlinstudy.ticking_alarm.data.model.AlarmModel
 import ows.kotlinstudy.ticking_alarm.databinding.ItemViewTimeBinding
 import javax.inject.Inject
 
-class MainAdapter @Inject constructor() : RecyclerView.Adapter<MainAdapter.ViewHolder>() {
 
+class AlarmAdapter @Inject constructor() : RecyclerView.Adapter<AlarmAdapter.ViewHolder>() {
     inner class ViewHolder(
         private val binding: ItemViewTimeBinding
     ) : RecyclerView.ViewHolder(binding.root) {
@@ -29,7 +25,7 @@ class MainAdapter @Inject constructor() : RecyclerView.Adapter<MainAdapter.ViewH
 
     private var alarmList = listOf<AlarmModel>()
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AlarmAdapter.ViewHolder {
         return ViewHolder(
             ItemViewTimeBinding.inflate(
                 LayoutInflater.from(parent.context),

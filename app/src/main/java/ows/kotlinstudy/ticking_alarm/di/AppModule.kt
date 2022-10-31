@@ -14,6 +14,7 @@ import ows.kotlinstudy.ticking_alarm.data.db.dao.AlarmDao
 @Module
 @InstallIn(SingletonComponent::class)
 object AppModule {
+
     @Provides
     fun provideRoomDatabase(
         @ApplicationContext context: Context
