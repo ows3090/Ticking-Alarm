@@ -16,6 +16,6 @@ interface MainContract {
         fun insertAlarm(hour: Int, minute: Int)
         fun updateAlarm(hour: Int, minute: Int)
         fun deleteAlarm(hour: Int, minute: Int)
-        fun selectAll()
+        fun update()
     }
 }

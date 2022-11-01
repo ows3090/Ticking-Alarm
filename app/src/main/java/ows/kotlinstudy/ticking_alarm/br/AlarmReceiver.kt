@@ -47,6 +47,8 @@ class AlarmReceiver : BroadcastReceiver() {
     private fun createNotification(context: Context): Notification.Builder{
         val intent = Intent(context, MainActivity::class.java).apply{
             flags = Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK
+            putExtra(MainActivity.IS_ALARM_EVENT, true)
+            putExtra(MainActivity.ALARM_ID, alarmId)
         }
 
         val pendingIntent = PendingIntent.getActivity(context, alarmId, intent, PendingIntent.FLAG_UPDATE_CURRENT)

@@ -38,6 +38,15 @@ class MainActivity : AppCompatActivity(), MainContract.View<MainPresenter> {
         initViews()
     }
 
+    override fun onResume() {
+        super.onResume()
+        if(intent.getBooleanExtra(IS_ALARM_EVENT, false)) {
+            val alarmId = intent.getIntExtra(ALARM_ID, 0)
+            presenter.updateAlarm(alarmId / 60, alarmId % 60)
+        }
+        else presenter.init()
+    }
+
     override fun onDestroy() {
         Timber.d("onDestory()")
         presenter.onDestroy()
@@ -110,5 +119,6 @@ class MainActivity : AppCompatActivity(), MainContract.View<MainPresenter> {
 
     companion object {
         const val ALARM_ID = "ALARM_ID"
+        const val IS_ALARM_EVENT = "IS_ALARM_EVENT"
     }
 }
