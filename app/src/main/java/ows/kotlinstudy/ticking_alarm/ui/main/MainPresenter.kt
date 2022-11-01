@@ -25,7 +25,6 @@ class MainPresenter @Inject constructor(
     override fun onCreate(view: BaseView<out BasePresenter>) {
         Timber.d("onCreate()")
         this.view = view as MainContract.View<MainPresenter>
-        init()
     }
 
     override fun onDestroy() {
@@ -44,7 +43,7 @@ class MainPresenter @Inject constructor(
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
-                    { selectAll() },
+                    { update() },
                     { error -> Timber.e(error) }
                 )
         )
@@ -64,7 +63,7 @@ class MainPresenter @Inject constructor(
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
                     {
-                        selectAll()
+                        update()
                         view.switchOnAlarm(model.alarmInfo.hour, model.alarmInfo.minute)
                     },
                     { error -> Timber.e(error) }
@@ -84,12 +83,9 @@ class MainPresenter @Inject constructor(
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
                     { entity ->
-                        selectAll()
-                        if (entity.switchOn) {
-                            view.switchOnAlarm(entity.hour, entity.minute)
-                        } else {
-                            view.switchOffAlarm(entity.hour, entity.minute)
-                        }
+                        update()
+                        if (entity.switchOn) view.switchOnAlarm(entity.hour, entity.minute)
+                        else view.switchOffAlarm(entity.hour, entity.minute)
                     },
                     { error -> Timber.e(error) }
                 )
@@ -100,21 +96,23 @@ class MainPresenter @Inject constructor(
         Timber.d("deleteAlarm hour: $hour minute: $minute")
         compositeDisposable.add(
             dao.getAlarm(hour, minute)
-                .flatMap { dao.deleteAlarm(it).andThen(Single.just(it)) }
+                .flatMap {
+                    dao.deleteAlarm(it).andThen(Single.just(it))
+                }
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
                     {
-                        selectAll()
-                        if(it.switchOn)  view.switchOffAlarm(hour, minute)
+                        update()
+                        if (it.switchOn) view.switchOffAlarm(hour, minute)
                     },
-                    { error -> Timber.e(error)}
+                    { error -> Timber.e(error) }
                 )
         )
     }
 
-    override fun selectAll() {
-        Timber.d("selectAll()")
+    override fun update() {
+        Timber.d("update()")
         compositeDisposable.add(
             dao.getAll()
                 .subscribeOn(Schedulers.io())
