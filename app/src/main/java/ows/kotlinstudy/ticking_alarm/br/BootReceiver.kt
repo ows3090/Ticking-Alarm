@@ -6,6 +6,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.widget.Toast
+import dagger.hilt.android.AndroidEntryPoint
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import io.reactivex.rxjava3.schedulers.Schedulers
@@ -17,19 +18,21 @@ import timber.log.Timber
 import java.util.*
 import javax.inject.Inject
 
+@AndroidEntryPoint
 class BootReceiver: BroadcastReceiver() {
     @Inject
     lateinit var dao: AlarmDao
-    val compositeDisposable = CompositeDisposable()
+
+    private val compositeDisposable = CompositeDisposable()
 
     override fun onReceive(context: Context, intent: Intent) {
         Timber.d("onReceive")
         if(intent.action == "android.intent.action.BOOT_COMPLETED"){
-            initAlarm(context)
+            setAlarm(context)
         }
     }
 
-    private fun initAlarm(context: Context){
+    private fun setAlarm(context: Context){
         compositeDisposable.add(
             dao.getAll()
                 .subscribeOn(Schedulers.io())
@@ -43,7 +46,7 @@ class BootReceiver: BroadcastReceiver() {
     private fun setSavedAlarm(context: Context, list: List<AlarmEntity>){
         list.forEach { entity ->
             val alarmId = entity.hour * 60 + entity.minute
-            val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as? AlarmManager
+            val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
             val pendingIntent = Intent(context, AlarmReceiver::class.java).apply {
                 putExtra(MainActivity.ALARM_ID, alarmId)
             }.let { intent ->
@@ -61,13 +64,7 @@ class BootReceiver: BroadcastReceiver() {
                 calendar.add(Calendar.DAY_OF_MONTH, 1)
             }
 
-            Timber.d("switchOnAlarm ${calendar.get(Calendar.YEAR)} ${calendar.get(Calendar.MONTH)} ${calendar.get(
-                Calendar.DAY_OF_MONTH)}" +
-                    " ${calendar.get(Calendar.HOUR_OF_DAY)} ${calendar.get(Calendar.MINUTE)} ${calendar.get(
-                        Calendar.SECOND)}")
-
-            Toast.makeText(context, "${calendar.get(Calendar.HOUR_OF_DAY)}시 ${calendar.get(Calendar.MINUTE)}에 알람이 울립니다.", Toast.LENGTH_SHORT).show()
-            alarmManager?.setExactAndAllowWhileIdle(
+            alarmManager.setExactAndAllowWhileIdle(
                 AlarmManager.RTC_WAKEUP,
                 calendar.timeInMillis,
                 pendingIntent
